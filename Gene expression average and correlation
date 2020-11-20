@@ -1,7 +1,4 @@
-############################################################################
 # INSTALL PACKAGES 
-############################################################################
-
 # install and read packages for analysis of
 # average expression, correlation and survival
  if (!requireNamespace("BiocManager", quietly = TRUE))
@@ -9,13 +6,8 @@
  BiocManager::install("plyr") 
  BiocManager::install("ggpubr")
  BiocManager::install("Hmisc")
- BiocManager::install("svglite")
- BiocManager::install("survminer")
 
-#############################################################################
 # DOWNLOAD DATA FROM cBioPortal
-#############################################################################
- 
 # Select cBioPortal for Cancer Genomics, Breast Invasive Carcinoma (TCGA, PanCancer Atlas)
 # choose Gene set
 # download mRNA Expression, RSEM (Batch normalized from Illumina HiSeq_RNASeqV2), rename to mRNA_original
@@ -124,11 +116,8 @@ write.table(StageIIIC, "StageIIIC.txt", sep="\t", row.names=TRUE, quote= F)
 StageIV = subset(mergedfinal, Stage == "STAGE IV")
 write.table(StageIV, "StageIV.txt", sep="\t", row.names=TRUE, quote= F)
 
-####################################################################################
 # EXPRESSION LEVEL COMPARISON BETWEEN DIFFERENT STAGES AND SUBTYPES
-####################################################################################
-
-# PREPARE BOX PLOTS AND SAVE AS SVG
+# PREPARE BOX PLOTS AND SAVE AS SVG AND JPEG
 
 # choose gene
 # choose Stage or Subtype
@@ -156,7 +145,7 @@ boxplot(GENE1~Stage,
         border="brown")
 dev.off()
 
-# CHECK NORMALITY BY PLOTTING AND SAVE AS SVG
+# CHECK NORMALITY BY PLOTTING AND SAVE AS SVG AND JPEG
 
 # package to plot normality
 library("ggpubr")
@@ -175,13 +164,11 @@ ggdensity(mergedfinal$GENE1,
           xlab = "Relative GENE1 expression")
 dev.off()
 
-# (removal of non applicaple (NA) groups from the plots manually during figure preparation)
+# (remove non applicaple (NA) groups from the plots manually during figure preparation if needed)
 
 # T-TEST TO COMPARE DIFFERENCES IN GENE EXPRESSION BETWEEN STAGES OR SUBTYPES
-
 # for analysis of expression level differences open all separate files needed (created above)
 # perform t-test to compare data in GENE1 columns
-
 # compare all stages to stage I
 
 # merge stages to compare merged samples
@@ -199,13 +186,10 @@ t.test(Imerged$GENE1, IImerged$GENE1, alternative = "two.sided", var.equal = FAL
 # perform to all options, replace the names when necessary
 t.test(Normal$GENE1, LumB$GENE1, alternative = "two.sided", var.equal = FALSE)
 
-
-##############################################################################################################
-# CORRELATION
-##############################################################################################################
-
+# MEASURE CORRELATION OF GENE1 AND GENE2 EXPRESSION LEVELS 
 # subset expression data to home directory and open for creating expression matrix
 # perform to all datasets separately (Stage and Subtype options)
+
 # for example LuminalA (LumA)
 Selection = c("GENE1", "GENE2")
 Expression = LumA[Selection]
@@ -232,44 +216,3 @@ plot(LumA$GENE1, LumA$GENE2, main = "Correlation LumA",
      xlab = "GENE1", ylab = "GENE2",
      pch = 19, frame = FALSE)
 dev.off()
-
-##############################################################################################################
-# KAPLAN MEIER ANALYSIS
-##############################################################################################################
-
-# perform analysis by kmplotter https://kmplot.com/analysis/
-# select mRNA gene chip
-# Start KM Plotter for breast cancer
-# use multiple genes and select probes
-# select Plot options: export plot data as text
-# split patients by Auto select best cutoff
-# choose OS (or RFS)
-# restrict analysis to subtypes
-
-# read the txt files into R
-kmplot = read.table("GENE1.txt", header = TRUE, sep = "",row.names = NULL) 
-
-# read the packages needed for Kaplan Meier analysis
-library("survival")
-library("survminer")
-
-# rename columns
-colnames(kmplot) = c("Sample", "GENE1", "OS", "Event")
-
-# Plot Kaplan-Meier Overall Survival and save 
-KM_OS = survfit(Surv(OS, Event) ~ GENE1, data=kmplot)
-
-# save each plot separately to home directory (select correct) 
-# changes file names accordingly
-
-# save as svg
-svg("GENE1_KMOS.svg")
-ggsurvplot(KM_OS, data = kmplot, risk.table = TRUE, palette = "igv")
-dev.off()
-
-jpeg("GENE1_KMOS.jpg")
-ggsurvplot(KM_OS, data = kmplot, risk.table = TRUE, palette = "igv")
-dev.off()
-
-# confirm how to refer to R for writing materials and methods
-citation()
